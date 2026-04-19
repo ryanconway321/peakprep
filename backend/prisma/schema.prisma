@@ -12,8 +12,9 @@ model User {
   email     String   @unique
   name      String?
   createdAt DateTime @default(now())
-  studySets StudySet[]
-  sessions  StudySession[]
+  studySets         StudySet[]
+  sessions          StudySession[]
+  pushSubscriptions PushSubscription[]
 }
 
 model StudySet {
@@ -51,4 +52,17 @@ model StudySession {
   total      Int?
   duration   Int?     // seconds
   createdAt  DateTime @default(now())
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  reminderHour Int   @default(19) // 0-23 local hour to send study reminder
+  createdAt DateTime @default(now())
+
+  @@map("push_subscriptions")
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, useUser, UserButton } from '@clerk/clerk-react';
+import { useNotifications } from '../hooks/useNotifications';
 
 const subjectColors = {
   Math: 'from-blue-600 to-blue-800',
@@ -20,6 +21,8 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { getToken } = useAuth();
   const { user } = useUser();
+  const [reminderHour, setReminderHour] = useState(19);
+  const { supported, subscribed, loading: notifLoading, subscribe, unsubscribe, updateReminderHour } = useNotifications(getToken);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('today'); // today | plan | sets
@@ -361,6 +364,55 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Notification settings */}
+        <div className="px-4 pb-10 mt-4">
+          <div className="bg-slate-800/60 border border-slate-700 rounded-2xl p-5">
+            <h3 className="text-white font-bold mb-1">🔔 Study Reminders</h3>
+            <p className="text-slate-400 text-sm mb-4">Get a daily push notification to remind you to review your cards.</p>
+            {!supported ? (
+              <p className="text-slate-500 text-sm">Not supported on this browser.</p>
+            ) : subscribed ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="text-slate-300 text-sm">Remind me at</label>
+                  <select
+                    value={reminderHour}
+                    onChange={e => { const h = parseInt(e.target.value); setReminderHour(h); updateReminderHour(h); }}
+                    className="bg-slate-700 text-white text-sm rounded-lg px-3 py-1.5 border border-slate-600"
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>{i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}</option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={unsubscribe} disabled={notifLoading}
+                  className="w-full py-2.5 rounded-xl border border-red-800 text-red-400 hover:bg-red-950 text-sm font-bold transition-colors disabled:opacity-50">
+                  {notifLoading ? 'Turning off…' : 'Turn Off Notifications'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="text-slate-300 text-sm">Remind me at</label>
+                  <select
+                    value={reminderHour}
+                    onChange={e => setReminderHour(parseInt(e.target.value))}
+                    className="bg-slate-700 text-white text-sm rounded-lg px-3 py-1.5 border border-slate-600"
+                  >
+                    {Array.from({ length: 24 }, (_, i) => (
+                      <option key={i} value={i}>{i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i - 12}:00 PM`}</option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={() => subscribe(reminderHour)} disabled={notifLoading}
+                  className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold transition-colors disabled:opacity-50">
+                  {notifLoading ? 'Enabling…' : 'Enable Notifications'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -9,6 +9,8 @@ const setsRouter      = require('./routes/sets');
 const cardsRouter     = require('./routes/cards');
 const generateRouter  = require('./routes/generate');
 const sessionsRouter  = require('./routes/sessions');
+const pushRouter      = require('./routes/push');
+const { sendStudyReminders } = require('./routes/push');
 
 const app = express();
 app.use(helmet());
@@ -22,6 +24,11 @@ app.use('/api/sets',     setsRouter);
 app.use('/api/cards',    cardsRouter);
 app.use('/api/generate', generateRouter);
 app.use('/api/sessions', sessionsRouter);
+app.use('/api/push',     pushRouter);
+
+// Cron: send study reminders every hour on the hour
+const cron = require('node-cron');
+cron.schedule('0 * * * *', () => sendStudyReminders().catch(console.error));
 
 app.use((err, req, res, next) => {
   console.error(err);
