@@ -22,7 +22,12 @@ export default function DashboardPage() {
   const { user } = useUser();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState('today'); // today | sets
+  const [tab, setTab] = useState('today'); // today | plan | sets
+  const [plan, setPlan] = useState(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [testDate, setTestDate] = useState('');
+  const [selectedSets, setSelectedSets] = useState([]);
+  const [planError, setPlanError] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -37,6 +42,36 @@ export default function DashboardPage() {
     }
     load();
   }, [getToken]);
+
+  async function generatePlan() {
+    if (!testDate || !selectedSets.length) return;
+    setPlanLoading(true);
+    setPlanError(null);
+    setPlan(null);
+    try {
+      const token = await getToken();
+      const sets = selectedSets.map(id => {
+        const s = data.sets.find(x => x.id === id);
+        const due = data.dueCards.find(d => d.setId === id);
+        return { id, title: s.title, cardCount: s._count?.cards || 0, hardCount: due?.count || 0 };
+      });
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ testDate, sets }),
+      });
+      if (!res.ok) throw new Error();
+      const result = await res.json();
+      setPlan(result.plan);
+    } catch {
+      setPlanError('Could not generate plan. Try again.');
+    }
+    setPlanLoading(false);
+  }
+
+  function toggleSet(id) {
+    setSelectedSets(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  }
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -118,7 +153,7 @@ export default function DashboardPage() {
 
         {/* Tabs */}
         <div className="flex rounded-xl bg-slate-900 border border-slate-800 p-1">
-          {[{ id: 'today', label: '📚 Study Sets' }, { id: 'hspt', label: '🎯 HSPT Prep' }].map(t => (
+          {[{ id: 'today', label: '📚 Sets' }, { id: 'plan', label: '📅 Plan' }, { id: 'hspt', label: '🎯 HSPT' }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
               className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${tab === t.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
               {t.label}
@@ -169,6 +204,117 @@ export default function DashboardPage() {
                   </div>
                 </button>
               ))
+            )}
+          </div>
+        )}
+
+        {/* Study Plan */}
+        {tab === 'plan' && (
+          <div className="space-y-4 pb-4">
+            {!plan ? (
+              <>
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                  <p className="text-white font-bold text-sm">📅 When is your test?</p>
+                  <input
+                    type="date"
+                    value={testDate}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={e => setTestDate(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {data?.sets?.length > 0 && (
+                  <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <p className="text-white font-bold text-sm">📚 Which sets are you studying?</p>
+                    <div className="space-y-2">
+                      {data.sets.map(s => (
+                        <button key={s.id} onClick={() => toggleSet(s.id)}
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-colors text-left ${
+                            selectedSets.includes(s.id)
+                              ? 'bg-indigo-900/40 border-indigo-600 text-white'
+                              : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500'
+                          }`}>
+                          <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                            selectedSets.includes(s.id) ? 'bg-indigo-600 border-indigo-600' : 'border-slate-600'
+                          }`}>
+                            {selectedSets.includes(s.id) && <span className="text-white text-xs">✓</span>}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">{s.title}</p>
+                            <p className="text-xs text-slate-500">{s._count?.cards || 0} cards{s.subject ? ` · ${s.subject}` : ''}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {planError && <p className="text-red-400 text-sm text-center">{planError}</p>}
+
+                <button
+                  onClick={generatePlan}
+                  disabled={!testDate || !selectedSets.length || planLoading}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors"
+                >
+                  {planLoading ? (
+                    <><svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg>Building your plan…</>
+                  ) : '✨ Build My Study Plan'}
+                </button>
+              </>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-white font-black text-lg">Your Study Plan</p>
+                  <button onClick={() => { setPlan(null); setSelectedSets([]); setTestDate(''); }}
+                    className="text-slate-400 hover:text-white text-sm">Start Over</button>
+                </div>
+
+                {plan.map((day, i) => {
+                  const isToday = i === 0;
+                  const modeIcons = { flashcards: '🃏', quiz: '📝', test: '⏱️' };
+                  return (
+                    <div key={day.day} className={`rounded-2xl border p-4 space-y-3 ${
+                      isToday ? 'bg-indigo-950/60 border-indigo-700/60' : 'bg-slate-900 border-slate-800'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            {isToday && <span className="text-xs bg-indigo-600 text-white font-bold px-2 py-0.5 rounded-full">TODAY</span>}
+                            <p className={`font-black ${isToday ? 'text-indigo-300' : 'text-white'}`}>Day {day.day} — {day.label}</p>
+                          </div>
+                          <p className="text-xs text-slate-400 mt-0.5">{day.date}</p>
+                        </div>
+                        <span className="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full">~{day.totalMinutes} min</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {day.tasks.map((task, j) => (
+                          <div key={j} className="bg-slate-800/60 rounded-xl px-3 py-2.5 flex items-center gap-3">
+                            <span className="text-lg">{modeIcons[task.mode] || '📖'}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-sm font-semibold truncate">{task.setTitle}</p>
+                              <p className="text-slate-400 text-xs">{task.focus} · ~{task.minutes} min</p>
+                            </div>
+                            {task.setId && isToday && (
+                              <button
+                                onClick={() => navigate(`/sets/${task.setId}/${task.mode}`)}
+                                className="flex-shrink-0 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                Start
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      {day.tip && (
+                        <p className="text-xs text-slate-400 italic border-t border-slate-800 pt-2">💡 {day.tip}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
