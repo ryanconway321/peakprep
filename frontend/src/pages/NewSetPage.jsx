@@ -11,8 +11,9 @@ export default function NewSetPage() {
   const [description, setDescription] = useState('');
   const [subject, setSubject] = useState('');
   const [notes, setNotes] = useState('');
+  const [quizletText, setQuizletText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState('generate'); // generate | manual
+  const [mode, setMode] = useState('generate'); // generate | manual | quizlet
 
   async function create() {
     if (!title.trim()) return;
@@ -36,6 +37,24 @@ export default function NewSetPage() {
           if (!genRes.ok) throw new Error();
         } catch {
           // Set was created — navigate anyway, user can add cards manually
+        }
+      }
+
+      if (mode === 'quizlet' && quizletText.trim()) {
+        // Parse tab-separated Quizlet export: term\tdefinition\n...
+        const cards = quizletText.trim().split('\n')
+          .map(line => {
+            const tab = line.indexOf('\t');
+            if (tab === -1) return null;
+            return { front: line.slice(0, tab).trim(), back: line.slice(tab + 1).trim() };
+          })
+          .filter(c => c && c.front && c.back);
+        if (cards.length > 0) {
+          await fetch(`${import.meta.env.VITE_API_URL}/api/cards/bulk`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ studySetId: set.id, cards }),
+          });
         }
       }
 
@@ -86,7 +105,7 @@ export default function NewSetPage() {
 
         {/* Mode toggle */}
         <div className="flex rounded-xl bg-slate-900 border border-slate-800 p-1">
-          {[{ id: 'generate', label: '🤖 AI Generate' }, { id: 'manual', label: '✏️ Manual' }].map(m => (
+          {[{ id: 'generate', label: '🤖 AI' }, { id: 'quizlet', label: '📋 Quizlet' }, { id: 'manual', label: '✏️ Manual' }].map(m => (
             <button key={m.id} onClick={() => setMode(m.id)}
               className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${mode === m.id ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white'}`}>
               {m.label}
@@ -107,6 +126,32 @@ export default function NewSetPage() {
           </div>
         )}
 
+        {mode === 'quizlet' && (
+          <div className="space-y-3">
+            <div className="bg-slate-900 border border-indigo-800/40 rounded-2xl p-4 space-y-1">
+              <p className="text-white font-semibold text-sm">How to export from Quizlet:</p>
+              <ol className="text-slate-400 text-xs space-y-1 list-decimal list-inside">
+                <li>Open your Quizlet set</li>
+                <li>Click <span className="text-white font-medium">⋯ More</span> → <span className="text-white font-medium">Export</span></li>
+                <li>Make sure it's set to <span className="text-white font-medium">Tab</span> between term and definition</li>
+                <li>Click <span className="text-white font-medium">Copy text</span> and paste it below</li>
+              </ol>
+            </div>
+            <textarea
+              placeholder="Paste your Quizlet export here…"
+              value={quizletText}
+              onChange={e => setQuizletText(e.target.value)}
+              rows={8}
+              className="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 resize-none text-sm font-mono"
+            />
+            {quizletText.trim() && (
+              <p className="text-xs text-indigo-400">
+                {quizletText.trim().split('\n').filter(l => l.includes('\t')).length} cards detected
+              </p>
+            )}
+          </div>
+        )}
+
         {mode === 'manual' && (
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center text-slate-400 text-sm">
             Create the set first, then add cards one by one on the next screen.
@@ -119,8 +164,8 @@ export default function NewSetPage() {
           className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-black py-4 rounded-2xl text-base transition-colors flex items-center justify-center gap-2"
         >
           {loading ? (
-            <><svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> {mode === 'generate' ? 'Generating cards…' : 'Creating…'}</>
-          ) : mode === 'generate' ? '✨ Generate & Create' : 'Create Set'}
+            <><svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/></svg> {mode === 'generate' ? 'Generating cards…' : mode === 'quizlet' ? 'Importing…' : 'Creating…'}</>
+          ) : mode === 'generate' ? '✨ Generate & Create' : mode === 'quizlet' ? '📋 Import from Quizlet' : 'Create Set'}
         </button>
       </div>
     </div>

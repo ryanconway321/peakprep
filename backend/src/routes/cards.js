@@ -4,6 +4,17 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const router = Router();
 
+router.post('/bulk', requireAuth(), async (req, res, next) => {
+  try {
+    const { studySetId, cards } = req.body;
+    if (!studySetId || !cards?.length) return res.status(400).json({ error: 'studySetId and cards required' });
+    await prisma.card.createMany({
+      data: cards.map(c => ({ studySetId, front: c.front, back: c.back })),
+    });
+    res.json({ count: cards.length });
+  } catch (err) { next(err); }
+});
+
 router.post('/', requireAuth(), async (req, res, next) => {
   try {
     const { studySetId, front, back } = req.body;
