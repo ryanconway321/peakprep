@@ -94,7 +94,7 @@ router.post('/plan', requireAuth(), async (req, res, next) => {
     today.setHours(0, 0, 0, 0);
     const exam = new Date(testDate);
     exam.setHours(0, 0, 0, 0);
-    const daysUntil = Math.max(1, Math.round((exam - today) / 86400000));
+    const daysUntil = Math.max(1, Math.ceil((exam - today) / 86400000));
 
     const setList = sets.map(s =>
       `- "${s.title}": ${s.cardCount} cards total, ${s.hardCount} rated Hard (needs more review)`
@@ -141,10 +141,16 @@ Use the exact set titles from the list above. For setId use the set title as a p
     });
 
     const text = response.content[0].text;
+    console.log('Plan AI response:', text.slice(0, 500));
     const match = text.match(/\[[\s\S]*\]/);
-    if (!match) return res.status(500).json({ error: 'Could not parse plan' });
+    if (!match) return res.status(500).json({ error: 'Could not parse plan', raw: text.slice(0, 200) });
 
-    const plan = JSON.parse(match[0]);
+    let plan;
+    try {
+      plan = JSON.parse(match[0]);
+    } catch (e) {
+      return res.status(500).json({ error: 'Invalid JSON in plan response', raw: match[0].slice(0, 200) });
+    }
 
     // Inject real set IDs by matching titles
     const setMap = {};
