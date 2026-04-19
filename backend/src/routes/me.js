@@ -20,6 +20,12 @@ router.post('/sync', requireAuth(), async (req, res, next) => {
 router.get('/dashboard', requireAuth(), async (req, res, next) => {
   try {
     const { userId } = getAuth(req);
+    // Ensure user exists
+    await prisma.user.upsert({
+      where: { id: userId },
+      update: {},
+      create: { id: userId, email: '', name: '' },
+    });
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today.getTime() + 86400000);

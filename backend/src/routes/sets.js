@@ -20,6 +20,12 @@ router.post('/', requireAuth(), async (req, res, next) => {
   try {
     const { userId } = getAuth(req);
     const { title, description, subject } = req.body;
+    // Ensure user exists before creating set
+    await prisma.user.upsert({
+      where: { id: userId },
+      update: {},
+      create: { id: userId, email: '', name: '' },
+    });
     const set = await prisma.studySet.create({
       data: { userId, title, description, subject },
     });
