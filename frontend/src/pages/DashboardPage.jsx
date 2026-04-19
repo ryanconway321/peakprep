@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [plan, setPlan] = useState(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [testDate, setTestDate] = useState('');
+  const [testDescription, setTestDescription] = useState('');
   const [selectedSets, setSelectedSets] = useState([]);
   const [planError, setPlanError] = useState(null);
 
@@ -58,7 +59,7 @@ export default function DashboardPage() {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ testDate, sets }),
+        body: JSON.stringify({ testDate, testDescription, sets }),
       });
       if (!res.ok) throw new Error();
       const result = await res.json();
@@ -221,6 +222,13 @@ export default function DashboardPage() {
                     min={new Date().toISOString().slice(0, 10)}
                     onChange={e => setTestDate(e.target.value)}
                     className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-indigo-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="What's the test on? (e.g. Latin declensions, chapters 1-3)"
+                    value={testDescription}
+                    onChange={e => setTestDescription(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 

@@ -86,7 +86,7 @@ Respond ONLY with a JSON array:
 // POST /api/generate/plan — generate a multi-day study plan
 router.post('/plan', requireAuth(), async (req, res, next) => {
   try {
-    const { testDate, sets } = req.body;
+    const { testDate, testDescription, sets } = req.body;
     // sets: [{ id, title, cardCount, hardCount }]
     if (!testDate || !sets?.length) return res.status(400).json({ error: 'testDate and sets required' });
 
@@ -100,12 +100,14 @@ router.post('/plan', requireAuth(), async (req, res, next) => {
       `- "${s.title}": ${s.cardCount} cards total, ${s.hardCount} rated Hard (needs more review)`
     ).join('\n');
 
+    const testContext = testDescription ? `\nTest topic: ${testDescription}` : '';
+
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 2048,
       messages: [{
         role: 'user',
-        content: `You are a study coach. Create a realistic ${daysUntil}-day study plan for a student with a test on ${testDate}.
+        content: `You are a study coach. Create a realistic ${daysUntil}-day study plan for a student with a test on ${testDate}.${testContext}
 
 Study sets:
 ${setList}
