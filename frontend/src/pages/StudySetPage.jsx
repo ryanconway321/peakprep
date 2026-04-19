@@ -81,6 +81,14 @@ export default function StudySetPage() {
 
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         {/* Study modes */}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <button onClick={() => navigate(`/sets/${id}/workout`)}
+            disabled={!set.cards?.length}
+            className="bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex flex-col items-center gap-1 transition-colors col-span-2">
+            <span className="text-2xl">💪</span>
+            <span className="text-xs">Workout Study — wrong answers = push-ups</span>
+          </button>
+        </div>
         <div className="grid grid-cols-3 gap-3">
           <button onClick={() => navigate(`/sets/${id}/flashcards`)}
             disabled={!set.cards?.length}

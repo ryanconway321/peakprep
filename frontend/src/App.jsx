@@ -9,6 +9,7 @@ import QuizPage from './pages/QuizPage.jsx';
 import NewSetPage from './pages/NewSetPage.jsx';
 import TestModePage from './pages/TestModePage.jsx';
 import FinalsPage from './pages/FinalsPage.jsx';
+import WorkoutStudyPage from './pages/WorkoutStudyPage.jsx';
 
 function SyncUser() {
   const { user } = useUser();
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/sets/:id/quiz" element={<SignedIn><QuizPage /></SignedIn>} />
         <Route path="/sets/:id/test" element={<SignedIn><TestModePage /></SignedIn>} />
         <Route path="/finals" element={<SignedIn><FinalsPage /></SignedIn>} />
+        <Route path="/sets/:id/workout" element={<SignedIn><WorkoutStudyPage /></SignedIn>} />
       </Routes>
     </>
   );
