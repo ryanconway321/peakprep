@@ -44,15 +44,15 @@ export default function DashboardPage() {
   }, [getToken]);
 
   async function generatePlan() {
-    if (!testDate || !selectedSets.length) return;
+    if (!testDate || !selectedSets.length || !data) return;
     setPlanLoading(true);
     setPlanError(null);
     setPlan(null);
     try {
       const token = await getToken();
       const sets = selectedSets.map(id => {
-        const s = data.sets.find(x => x.id === id);
-        const due = data.dueCards.find(d => d.setId === id);
+        const s = (data.sets || []).find(x => x.id === id);
+        const due = (data.dueCards || []).find(d => d.setId === id);
         return { id, title: s.title, cardCount: s._count?.cards || 0, hardCount: due?.count || 0 };
       });
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/plan`, {
@@ -193,9 +193,9 @@ export default function DashboardPage() {
                         </span>
                       )}
                       <div className="flex gap-2">
-                        {data.dueCards.find(d => d.setId === set.id) && (
+                        {(data.dueCards || []).find(d => d.setId === set.id) && (
                           <span className="text-xs text-orange-400 font-bold">
-                            {data.dueCards.find(d => d.setId === set.id).count} due
+                            {(data.dueCards || []).find(d => d.setId === set.id).count} due
                           </span>
                         )}
                         <span className="text-slate-500 text-xs">{set._count?.cards || 0} cards</span>
