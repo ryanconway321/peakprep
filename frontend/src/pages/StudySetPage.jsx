@@ -81,18 +81,24 @@ export default function StudySetPage() {
 
       <div className="max-w-lg mx-auto px-4 pt-5 space-y-4">
         {/* Study modes */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <button onClick={() => navigate(`/sets/${id}/flashcards`)}
             disabled={!set.cards?.length}
             className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex flex-col items-center gap-1 transition-colors">
             <span className="text-2xl">🃏</span>
-            <span className="text-sm">Flashcards</span>
+            <span className="text-xs">Flashcards</span>
           </button>
           <button onClick={() => navigate(`/sets/${id}/quiz`)}
             disabled={!set.cards?.length}
             className="bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex flex-col items-center gap-1 transition-colors">
             <span className="text-2xl">📝</span>
-            <span className="text-sm">Quiz Me</span>
+            <span className="text-xs">Quiz Me</span>
+          </button>
+          <button onClick={() => navigate(`/sets/${id}/test`)}
+            disabled={!set.cards?.length}
+            className="bg-red-700 hover:bg-red-600 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex flex-col items-center gap-1 transition-colors">
+            <span className="text-2xl">⏱️</span>
+            <span className="text-xs">Test Mode</span>
           </button>
         </div>
 

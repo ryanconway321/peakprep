@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
 
@@ -11,6 +11,7 @@ export default function FlashcardsPage() {
   const [flipped, setFlipped] = useState(false);
   const [done, setDone] = useState(false);
   const [results, setResults] = useState({ easy: 0, medium: 0, hard: 0 });
+  const startRef = useRef(Date.now());
 
   useEffect(() => {
     async function load() {
@@ -40,6 +41,15 @@ export default function FlashcardsPage() {
 
     if (index + 1 >= cards.length) {
       setDone(true);
+      // Log session
+      const duration = Math.round((Date.now() - startRef.current) / 1000);
+      const newResults = { ...results, [difficulty === 1 ? 'easy' : difficulty === 2 ? 'medium' : 'hard']: results[difficulty === 1 ? 'easy' : difficulty === 2 ? 'medium' : 'hard'] + 1 };
+      const score = newResults.easy + newResults.medium;
+      getToken().then(token => fetch(`${import.meta.env.VITE_API_URL}/api/sessions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ studySetId: id, mode: 'flashcards', score, total: cards.length, duration }),
+      })).catch(() => {});
     } else {
       setIndex(i => i + 1);
       setFlipped(false);
