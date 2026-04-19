@@ -90,6 +90,12 @@ export default function StudySetPage() {
           </button>
         </div>
         <div className="grid grid-cols-3 gap-3">
+          <button onClick={() => navigate(`/sets/${id}/rapidfire`)}
+            disabled={!set.cards?.length}
+            className="bg-gradient-to-br from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex flex-col items-center gap-1 transition-colors col-span-3">
+            <span className="text-2xl">⚡</span>
+            <span className="text-xs">Rapid Fire — 30 sec, answer as many as you can</span>
+          </button>
           <button onClick={() => navigate(`/sets/${id}/flashcards`)}
             disabled={!set.cards?.length}
             className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-bold py-4 rounded-2xl flex flex-col items-center gap-1 transition-colors">

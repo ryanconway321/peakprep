@@ -10,6 +10,7 @@ import NewSetPage from './pages/NewSetPage.jsx';
 import TestModePage from './pages/TestModePage.jsx';
 import FinalsPage from './pages/FinalsPage.jsx';
 import WorkoutStudyPage from './pages/WorkoutStudyPage.jsx';
+import RapidFirePage from './pages/RapidFirePage.jsx';
 
 function SyncUser() {
   const { user } = useUser();
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/sets/:id/test" element={<SignedIn><TestModePage /></SignedIn>} />
         <Route path="/finals" element={<SignedIn><FinalsPage /></SignedIn>} />
         <Route path="/sets/:id/workout" element={<SignedIn><WorkoutStudyPage /></SignedIn>} />
+        <Route path="/sets/:id/rapidfire" element={<SignedIn><RapidFirePage /></SignedIn>} />
       </Routes>
     </>
   );
