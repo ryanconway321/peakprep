@@ -27,16 +27,21 @@ export default function NewSetPage() {
       const set = await res.json();
 
       if (mode === 'generate' && notes.trim()) {
-        await fetch(`${import.meta.env.VITE_API_URL}/api/generate/cards`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ notes, studySetId: set.id, count: 15 }),
-        });
+        try {
+          const genRes = await fetch(`${import.meta.env.VITE_API_URL}/api/generate/cards`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ notes, studySetId: set.id, count: 15 }),
+          });
+          if (!genRes.ok) throw new Error();
+        } catch {
+          // Set was created — navigate anyway, user can add cards manually
+        }
       }
 
       navigate(`/sets/${set.id}`);
     } catch {
-      alert('Something went wrong. Try again.');
+      alert('Something went wrong creating the set. Try again.');
     }
     setLoading(false);
   }
