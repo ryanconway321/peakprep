@@ -102,41 +102,29 @@ router.post('/plan', requireAuth(), async (req, res, next) => {
 
     const testContext = testDescription ? `\nTest topic: ${testDescription}` : '';
 
+    // Cap at 7 days to keep response short and avoid token cutoff
+    const planDays = Math.min(daysUntil, 7);
+
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2048,
+      max_tokens: 4096,
       messages: [{
         role: 'user',
-        content: `You are a study coach. Create a realistic ${daysUntil}-day study plan for a student with a test on ${testDate}.${testContext}
+        content: `You are a study coach. Create a ${planDays}-day study plan for a student.${testContext}
 
 Study sets:
 ${setList}
 
-Today is day 1. The test is on day ${daysUntil + 1} (they should not study on the test day itself, unless it's tomorrow — in that case day 1 is the only study day).
+Return ONLY a valid JSON array with exactly ${planDays} day objects. No markdown, no explanation, just the JSON array.
+
+Format:
+[{"day":1,"date":"Mon Apr 21","label":"Deep Review","tasks":[{"setTitle":"EXACT_SET_TITLE","mode":"flashcards","focus":"Review all cards","minutes":15},{"setTitle":"EXACT_SET_TITLE","mode":"quiz","focus":"Test yourself","minutes":10}],"totalMinutes":25,"tip":"short tip here"}]
 
 Rules:
-- Spread the material evenly but prioritize Hard cards early
-- Include flashcards (review), quiz (practice), and test mode (final check) across the days
-- Keep each day to 20-40 minutes max
-- Day before the test: light review only, no new material
-- Be specific about which set and which mode each day
-
-Respond ONLY with a JSON array of days:
-[
-  {
-    "day": 1,
-    "date": "Mon Apr 21",
-    "label": "Deep Review",
-    "tasks": [
-      { "setId": "use_actual_set_title_here", "setTitle": "...", "mode": "flashcards", "focus": "All cards, prioritize Hard ones", "minutes": 15 },
-      { "setId": "use_actual_set_title_here", "setTitle": "...", "mode": "quiz", "focus": "Test your knowledge", "minutes": 10 }
-    ],
-    "totalMinutes": 25,
-    "tip": "one motivational or strategic tip for today"
-  }
-]
-
-Use the exact set titles from the list above. For setId use the set title as a placeholder (the frontend will match by title).`,
+- Use ONLY these mode values: flashcards, quiz, test
+- Use the EXACT set titles from the list above
+- Keep each day under 40 minutes total
+- Last day: light review only`,
       }],
     });
 
