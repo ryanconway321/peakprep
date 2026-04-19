@@ -162,11 +162,17 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Create new set button */}
-        <button onClick={() => navigate('/sets/new')}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-base transition-colors">
-          + Create Study Set
-        </button>
+        {/* Create new set / Finals prep */}
+        <div className="flex gap-2">
+          <button onClick={() => navigate('/sets/new')}
+            className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm transition-colors">
+            + New Set
+          </button>
+          <button onClick={() => navigate('/finals')}
+            className="flex-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm transition-colors">
+            🎓 Finals Prep
+          </button>
+        </div>
 
         {/* Study sets list */}
         {tab === 'today' && (
