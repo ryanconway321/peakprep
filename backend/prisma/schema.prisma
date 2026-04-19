@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  studySets StudySet[]
+  sessions  StudySession[]
+}
+
+model StudySet {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  title       String
+  description String?
+  subject     String?
+  cards       Card[]
+  sessions    StudySession[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Card {
+  id         String   @id @default(cuid())
+  studySetId String
+  studySet   StudySet @relation(fields: [studySetId], references: [id], onDelete: Cascade)
+  front      String
+  back       String
+  difficulty Int      @default(0) // 0=new, 1=easy, 2=medium, 3=hard
+  nextReview DateTime @default(now())
+  createdAt  DateTime @default(now())
+}
+
+model StudySession {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  studySetId String?
+  studySet   StudySet? @relation(fields: [studySetId], references: [id])
+  mode       String   // flashcards | quiz
+  score      Int?
+  total      Int?
+  duration   Int?     // seconds
+  createdAt  DateTime @default(now())
+}
